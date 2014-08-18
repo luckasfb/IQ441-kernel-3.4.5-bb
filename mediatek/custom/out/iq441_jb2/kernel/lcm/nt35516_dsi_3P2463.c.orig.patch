@@ -1,0 +1,180 @@
+--- nt35516_dsi_3P2463.c.orig	2012-10-17 12:30:13.000000000 +0300
++++ nt35516_dsi_3P2463.c	2013-06-10 13:37:07.000000000 +0300
+@@ -68,10 +68,9 @@
+ *
+ *****************************************************************************/
+ 
+-#include <linux/string.h>
+-
+ #include "lcm_drv.h"
+-#ifndef BUILD_UBOOT
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
++#include <linux/string.h>
+ #include <linux/delay.h>
+ #include <linux/kernel.h>       ///for printk
+ #include <linux/proc_fs.h>
+@@ -99,14 +98,17 @@
+ /* lcm_id, mika add  */
+ #define LCM_ID (0x00)
+ 
+-#ifdef BUILD_UBOOT
++#if defined(BUILD_UBOOT) || defined(BUILD_LK)
+ #undef printk
+ #define printk printf
+ #endif
+ 
+ 
+-static unsigned int lcm_esd_test = TRUE;      ///only for ESD test
+-#ifndef BUILD_UBOOT
++//static unsigned int lcm_esd_test = TRUE;      ///only for ESD test
++static unsigned int lcm_esd_test = FALSE;
++
++
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ #ifdef HQ_LCD_ESD_CHECK
+  bool havesuspended = FALSE;
+ extern int mt65xx_led_set_cust_public(struct cust_mt65xx_led *cust, int level);
+@@ -148,7 +150,7 @@
+ 
+ 
+ /* proc file system */
+-#ifndef BUILD_UBOOT
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ #define NT35516_CONFIG_PROC_FILE "nt35516_config"
+ static struct proc_dir_entry *nt35516_config_proc = NULL;
+ #endif
+@@ -158,7 +160,15 @@
+ 
+ 
+ 
+-#define LCM_INIT_DEBUG
++//#define LCM_INIT_DEBUG
++#ifdef LCM_INIT_DEBUG
++#define LCM_DBG(fmt...) printk(##fmt)
++#else
++#define LCM_DBG(fmt...) do{}while(0)
++#endif
++
++
++
+ #define LCM_USE_VIRTUAL_INVERTION
+ static struct LCM_setting_table lcm_initialization_setting[] = {
+ 	
+@@ -910,7 +920,7 @@
+     }
+ 	
+ }
+-
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ /*
+  * proc file syestem
+  */
+@@ -936,6 +946,7 @@
+ 
+ 	return 0;
+ }
++#endif
+ // ---------------------------------------------------------------------------
+ //  LCM Driver Implementations
+ // ---------------------------------------------------------------------------
+@@ -1019,7 +1030,7 @@
+     MDELAY(30);
+     SET_RESET_PIN(1);
+     MDELAY(130);
+-#ifdef BUILD_UBOOT
++#if defined(BUILD_UBOOT) || defined(BUILD_LK)
+     printf("lcm init:\n");
+ #endif
+ #if 0
+@@ -1050,7 +1061,7 @@
+ 	lcm_init_setting();
+ #endif
+ 	/* create proc file system */
+-	#ifndef BUILD_UBOOT
++	#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ 	nt35516_config_proc = create_proc_entry( NT35516_CONFIG_PROC_FILE, 0666, NULL);
+     
+ 	if ( nt35516_config_proc == NULL ){
+@@ -1065,7 +1076,7 @@
+ 
+ static unsigned int lcm_check_register()
+ {
+-	#ifndef BUILD_UBOOT
++	#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ 	unsigned char buffer[7];
+     	unsigned int array[16];	//mipi command
+ 	int i;
+@@ -1101,7 +1112,7 @@
+ 	#else
+ 	push_table(lcm_sleep_in_setting, sizeof(lcm_sleep_in_setting) / sizeof(struct LCM_setting_table), 1);
+ 	#endif
+-	#ifndef BUILD_UBOOT
++	#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ 	#ifdef HQ_LCD_ESD_CHECK
+ 	havesuspended = TRUE;
+ 	#endif
+@@ -1118,20 +1129,21 @@
+ 	 and delay 4 frames or more after reset */
+ 	#if defined(USE_DEEP_SLEEP_MODE)
+ 	SET_RESET_PIN(1);
+-	MDELAY(1);
++	MDELAY(11);
+     	SET_RESET_PIN(0);
+-	MDELAY(5);
++	MDELAY(3);
+     	SET_RESET_PIN(1);
+-    	MDELAY(10);
++    	MDELAY(5);
+ 
+ 	/* initial instuction setting and SRAM data setting */
+-	push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);
++	//push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);
++	lcm_init_setting();
+ 
+ 	#else
+ 	/* display on */
+ 	push_table(lcm_sleep_out_setting, sizeof(lcm_sleep_out_setting) / sizeof(struct LCM_setting_table), 1);
+ 	
+-	#ifndef BUILD_UBOOT
++	#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ 	#ifdef HQ_LCD_ESD_CHECK
+ 	printk("lcm_resume start \n");
+ 	if(TRUE == lcm_read_reg_value())
+@@ -1183,7 +1195,7 @@
+ 	data_array[6]= 0x002c3909;
+ 
+ 	dsi_set_cmdq(&data_array, 7, 0);
+-	#ifndef BUILD_UBOOT
++	#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+ 	#ifdef HQ_LCD_ESD_CHECK
+ 	if(havesuspended)
+ 	{		
+@@ -1289,8 +1301,8 @@
+ 
+ static unsigned int lcm_esd_check()
+ {
+-#ifndef BUILD_UBOOT
+-         printk("lcm_esd enter");
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
++         LCM_DBG("lcm_esd enter");
+ 
+          //kaka_12_0607_add
+          //return 0; //This just debug, Must removed when esd check fucnion is OK.
+@@ -1315,7 +1327,7 @@
+ }
+ static unsigned int lcm_dsi_read_test(unsigned char cmd)
+ {
+-#ifndef BUILD_UBOOT
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+         /// please notice: the max return packet size is 1
+         /// if you want to change it, you can refer to the following marked code
+         /// but read_reg currently only support read no more than 4 bytes....
+@@ -1336,7 +1348,7 @@
+ {
+     unsigned char para = 0;
+ 
+-#ifndef BUILD_UBOOT
++#if !(defined(BUILD_UBOOT) || defined(BUILD_LK))
+     printk("lcm_esd_recover enter");
+ #endif
+     

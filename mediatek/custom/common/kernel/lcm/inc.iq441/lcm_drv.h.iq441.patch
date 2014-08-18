@@ -1,0 +1,36 @@
+--- lcm_drv.h.orig	2013-10-02 19:51:09.000000000 +0300
++++ lcm_drv.h.iq441	2013-07-27 18:00:56.000000000 +0300
+@@ -9,6 +9,23 @@
+ #endif
+ 
+ // ---------------------------------------------------------------------------
++// LuckAs add from iq441
++//gionee pengxw add for lcm compare start 2012.4.18 
++#define COMPARE_ID_V_LEVEL_1      625     // 0.625V
++#define COMPARE_ID_V_LEVEL_2     1875     // 1.875V
++#define COMPARE_ADC_CHANNEL   0      
++//gionee pengxw add for lcm compare end 2012.4.18 // ---------------------------------------------------------------------------
++
++/* Gionee Qux add for LCM module voltage definition */
++#define LCM_ADC_CHAN    4  //channel
++//voltage(mV)
++#define LCM_V_BYD       1000
++#define LCM_V_TCL       1500 
++#define LCM_V_TRULY     500
++#define LCM_V_TM        0
++#define LCM_V_DEVIA     150  //deviation
++/* Gionee Qux. END */
++// LuckAs end
+ 
+ /* common enumerations */
+ 
+@@ -513,5 +530,9 @@
+ // ---------------------------------------------------------------------------
+ 
+ const LCM_DRIVER* LCM_GetDriver(void);
++// LuckAs add from iq441
++//Gione Qux
++extern int IMM_GetOneChannelValue(int dwChannel, int deCount);
++// LuckAs end
+ 
+ #endif // __LCM_DRV_H__

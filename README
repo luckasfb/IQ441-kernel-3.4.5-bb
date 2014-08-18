@@ -1,0 +1,7 @@
+Build Kernel Source
+=============
+
+cd kernel/
+export TARGET_PRODUCT=iq441_jb2 MTK_ROOT_CUSTOM=../mediatek/custom
+export CROSS_COMPILE="~/your_path_to_toolchains/arm-eabi-linaro-4.6.x/bin/arm-eabi-"
+make -j3
